@@ -40,7 +40,7 @@ func (p *Products) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if len(g[0]) != 1 {
+		if len(g[0]) != 2 {
 			http.Error(rw, "Invalid URI", http.StatusNotFound)
 			return
 		}
@@ -52,7 +52,9 @@ func (p *Products) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			http.Error(rw, "Unable to parse string", http.StatusInternalServerError)
 		}
 
-		p.l.Println("got id", id)
+		// p.l.Println("got id", id)
+		p.updateProducts(id, rw, r)
+		return
 	}
 
 	// catch all
@@ -70,9 +72,10 @@ func (p *Products) getProducts(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Products) addProduct(rw http.ResponseWriter, r *http.Request){
-	p.l.Println("Handle PUT Products")
+	p.l.Println("Handle POST Products")
 
 	prod := &data.Product{}
+
 	err := prod.FromJSON(r.Body)
 
 	if err != nil {
@@ -80,4 +83,27 @@ func (p *Products) addProduct(rw http.ResponseWriter, r *http.Request){
 	}
 
 	data.AddProduct(prod)
+}
+
+func (p *Products) updateProducts(id int, rw http.ResponseWriter, r*http.Request) {
+	p.l.Println("Handle PUT Products")
+
+	prod := &data.Product{}
+
+	err := prod.FromJSON(r.Body)
+
+	if err != nil {
+		http.Error(rw, "Unable to unmarshal json", http.StatusBadRequest)
+	}
+
+	err = data.UpdateProduct(id, prod)
+	if err == data.ErrProductNotFound {
+		http.Error(rw, "Product Not Found", http.StatusNotFound)
+		return
+	}
+
+	if err != nil {
+		http.Error(rw, "Product Not Found", http.StatusInternalServerError)
+		return
+	}
 }
