@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/go-openapi/runtime/middleware"
 	"github.com/DonnachaHeff/goMicro/handlers"
 	"github.com/gorilla/mux"
 )
@@ -34,6 +35,10 @@ func main() {
 	postRouter := sm.Methods(http.MethodPost).Subrouter()
 	postRouter.HandleFunc("/", ph.AddProduct)
 	postRouter.Use(ph.MiddlewareProductValidation)
+
+	opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
+	sh := middleware.Redoc(opts, nil)
+	getRouter.Handle("/docs", sh)
 
 	s := &http.Server{
 		Addr: ":9090",
