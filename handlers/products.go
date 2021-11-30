@@ -56,6 +56,29 @@ func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// swagger:route DELETE /products/{id} products deleteProducts
+// Returns a list of products
+// responses:
+// 201: noContent
+func (p *Products) DeleteProduct(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, _ := strconv.Atoi(vars["id"])
+
+	p.l.Println("Handle DELETE Product", id)
+
+	err := data.DeleteProduct(id)
+
+	if err == data.ErrProductNotFound {
+		http.Error(rw, "Product Not Found", http.StatusNotFound)
+		return
+	}
+
+	if err != nil {
+		http.Error(rw, "Product Not Found", http.StatusInternalServerError)
+		return
+	}
+}
+
 func (p *Products) AddProduct(rw http.ResponseWriter, r *http.Request){
 	p.l.Println("Handle POST Products")
 
