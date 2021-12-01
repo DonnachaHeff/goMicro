@@ -33,6 +33,18 @@ type productsResponseWrapper struct {
 	Body []data.Product
 }
 
+// swagger:parameters deleteProduct
+// deleteProduct acts as a reference to the DELETE route comment
+type productIDParameterWrapper struct {
+	// The id of the product to be deleted from the db
+	// in: path
+	// required: true
+	ID int `json:"id"`
+}
+
+// swagger:reponse noContent
+type productsNoContent struct {}
+
 // http.Handler
 type Products struct {
 	l *log.Logger
