@@ -11,12 +11,33 @@ import (
 )
 
 // defines a structure for an API product
+// swagger:model
 type Product struct {
+	// the id for the Product
+	//
+	// required: true
+	// min: 1
 	ID int `json:"id"`
+
+	// the name for the Product
+	// required: true
 	Name string `json:"name" validate:"required"`
+
+	// the description for the product
+	// required: false
 	Description string `json:"descripton"`
+
+	// the price of the Product
+	// required: false
+	// min: 1
 	Price float32 `json:"price" validate:"gt=0"`
+
+	// the sku of the Product
+	// required: true
+	// example: 123-123-123
+	// pattern: [a-z]+-[a-z]+-[a-z]+
 	SKU string `json:"sku" validate:"required,sku"` // custom validation - see validate.RegisterValidation("sku", validateSku)
+
 	CreatedOn string `json:"-"`
 	UpdatedOn string `json:"-"`
 	DeletedOn string `json:"-"`
@@ -59,6 +80,17 @@ func GetProducts() Products {
 func AddProduct(p *Product) {
 	p.ID = getNextID()
 	productList = append(productList, p)
+}
+
+func DeleteProduct(id int) error {
+	_, pos, err := findProduct(id)
+	if err != nil {
+		return err
+	}
+
+	productList = append(productList[:pos], productList[pos+1])
+
+	return nil
 }
 
 func UpdateProduct(id int, p*Product) error {
