@@ -33,13 +33,21 @@ type productsResponseWrapper struct {
 	Body []data.Product
 }
 
-// swagger:parameters deleteProduct
-// deleteProduct acts as a reference to the DELETE route comment
+// swagger:parameters deleteProduct updateProduct
+// deleteProduct & updateProduct act as a reference to the DELETE/PUT route comment
 type productIDParameterWrapper struct {
-	// The id of the product to be deleted from the db
+	// The id of the product to be deleted/updated from the db
 	// in: path
 	// required: true
 	ID int `json:"id"`
+}
+
+type errorResponseWrapper struct {
+	Body GenericError
+}
+
+type validationErrorWrapper struct {
+	Body ValidationError
 }
 
 // swagger:reponse noContent
@@ -48,6 +56,14 @@ type productsNoContent struct {}
 // http.Handler
 type Products struct {
 	l *log.Logger
+}
+
+type GenericError struct {
+	Message string `json:"message"`
+}
+
+type ValidationError struct {
+	Message string `json:"message"`
 }
 
 func NewProducts(l *log.Logger) *Products {
@@ -69,9 +85,10 @@ func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
 }
 
 // swagger:route DELETE /products/{id} products deleteProducts
-// Returns a list of products
 // responses:
 // 201: noContent
+// 404: errorResponse
+// 500: errorResponse
 func (p *Products) DeleteProduct(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
@@ -89,15 +106,29 @@ func (p *Products) DeleteProduct(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "Product Not Found", http.StatusInternalServerError)
 		return
 	}
+
+	rw.WriteHeader(http.StatusNoContent)
 }
 
+// swagger:route POST /products products addProducts
+// Adds a product to the list of products
+// responses:
+// 201: statusCreated
 func (p *Products) AddProduct(rw http.ResponseWriter, r *http.Request){
 	p.l.Println("Handle POST Products")
 
 	prod := r.Context().Value(KeyProduct{}).(data.Product) // cast to product
 	data.AddProduct(&prod)
+	rw.WriteHeader(http.StatusCreated)
 }
 
+// swagger:route PUT /products/{id} products updateProducts
+// Updates a product within the list of products
+// responses:
+// 202: statusAccepted
+// 400: validationErrorResponse
+// 404: errorResponse
+// 500: errorResponse
 func (p *Products) UpdateProducts(rw http.ResponseWriter, r*http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -121,6 +152,8 @@ func (p *Products) UpdateProducts(rw http.ResponseWriter, r*http.Request) {
 		http.Error(rw, "Product Not Found", http.StatusInternalServerError)
 		return
 	}
+
+	rw.WriteHeader(http.StatusAccepted)
 }
 
 type KeyProduct struct{}
